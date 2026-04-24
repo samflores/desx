@@ -1,0 +1,10 @@
+# cargo-mutants configuration.
+#
+# Exclude modules whose behavior can only be observed by walking real
+# XDG filesystem paths (`main.rs` and the filesystem-walk half of `xdg.rs`).
+# The pure transformation logic in exec_cleanup, desktop_entry, dedupe,
+# and `xdg::entries_to_apps` is what gets mutation-tested.
+exclude_globs = [
+    "src/main.rs",
+    "src/xdg.rs",
+]

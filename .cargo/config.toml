@@ -1,0 +1,12 @@
+[alias]
+# Coverage (requires `cargo install cargo-llvm-cov`):
+#   cargo cov          -> lcov report at target/lcov.info
+#   cargo cov-html     -> HTML report at target/llvm-cov/html/index.html
+#   cargo cov-missing  -> summary with uncovered line numbers listed
+cov = "llvm-cov --workspace --lcov --output-path target/lcov.info"
+cov-html = "llvm-cov --workspace --html"
+cov-missing = "llvm-cov --workspace --show-missing-lines --skip-functions"
+
+# Mutation testing (requires `cargo install cargo-mutants`):
+#   cargo mut          -> scoped by .cargo/mutants.toml
+mut = "mutants --no-shuffle"
