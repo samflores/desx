@@ -14,6 +14,7 @@ use std::path::{Path, PathBuf};
 use freedesktop_desktop_entry::{DesktopEntry, Iter};
 use tempfile::TempDir;
 
+use desx::category_filter::{CategoryFilter, apply};
 use desx::dedupe::dedupe_and_disambiguate;
 use desx::xdg::entries_to_apps;
 
@@ -35,6 +36,19 @@ fn run_pipeline(search_dirs: &[&Path]) -> Vec<(String, String)> {
     let apps = entries_to_apps(entries, &[]);
     let apps = dedupe_and_disambiguate(apps);
     apps.into_iter().map(|a| (a.name, a.exec)).collect()
+}
+
+fn run_pipeline_filtered(search_dirs: &[&Path], filter: &str) -> Vec<String> {
+    let entries = load_fixture_entries(search_dirs);
+    let apps = entries_to_apps(entries, &[]);
+    let apps = dedupe_and_disambiguate(apps);
+    let filter = CategoryFilter::parse(filter).unwrap();
+    let mut names: Vec<String> = apply(apps, filter.as_ref())
+        .into_iter()
+        .map(|a| a.name)
+        .collect();
+    names.sort();
+    names
 }
 
 #[test]
@@ -168,6 +182,78 @@ fn missing_name_is_rejected() {
 
     let out = run_pipeline(&[tmp.path()]);
     assert!(out.is_empty(), "expected no apps, got {:?}", out);
+}
+
+fn category_fixture(dir: &Path) {
+    write_desktop_file(
+        dir,
+        "quake.desktop",
+        "[Desktop Entry]\nType=Application\nName=Quake\nExec=quake\nCategories=Game;ActionGame;\n",
+    );
+    write_desktop_file(
+        dir,
+        "firefox.desktop",
+        "[Desktop Entry]\nType=Application\nName=Firefox\nExec=firefox\nCategories=Network;WebBrowser;\n",
+    );
+    write_desktop_file(
+        dir,
+        "gimp.desktop",
+        "[Desktop Entry]\nType=Application\nName=Gimp\nExec=gimp\nCategories=Graphics;\n",
+    );
+    write_desktop_file(
+        dir,
+        "uncategorized.desktop",
+        "[Desktop Entry]\nType=Application\nName=Mystery\nExec=mystery\n",
+    );
+}
+
+#[test]
+fn category_include_keeps_only_matching() {
+    let tmp = TempDir::new().unwrap();
+    category_fixture(tmp.path());
+    let out = run_pipeline_filtered(&[tmp.path()], "game");
+    assert_eq!(out, vec!["Quake"]);
+}
+
+#[test]
+fn category_include_is_case_insensitive() {
+    let tmp = TempDir::new().unwrap();
+    category_fixture(tmp.path());
+    let out = run_pipeline_filtered(&[tmp.path()], "GAME");
+    assert_eq!(out, vec!["Quake"]);
+}
+
+#[test]
+fn category_include_multiple() {
+    let tmp = TempDir::new().unwrap();
+    category_fixture(tmp.path());
+    let out = run_pipeline_filtered(&[tmp.path()], "game,network");
+    assert_eq!(out, vec!["Firefox", "Quake"]);
+}
+
+#[test]
+fn category_exclude_drops_matching() {
+    let tmp = TempDir::new().unwrap();
+    category_fixture(tmp.path());
+    let out = run_pipeline_filtered(&[tmp.path()], "-game");
+    // Everything except Quake, including the uncategorized entry.
+    assert_eq!(out, vec!["Firefox", "Gimp", "Mystery"]);
+}
+
+#[test]
+fn category_exclude_multiple() {
+    let tmp = TempDir::new().unwrap();
+    category_fixture(tmp.path());
+    let out = run_pipeline_filtered(&[tmp.path()], "-game,-graphics");
+    assert_eq!(out, vec!["Firefox", "Mystery"]);
+}
+
+#[test]
+fn category_include_excludes_uncategorized() {
+    let tmp = TempDir::new().unwrap();
+    category_fixture(tmp.path());
+    let out = run_pipeline_filtered(&[tmp.path()], "network");
+    assert_eq!(out, vec!["Firefox"]);
 }
 
 #[test]

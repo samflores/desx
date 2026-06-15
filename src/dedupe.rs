@@ -83,6 +83,7 @@ mod tests {
             icon: None,
             exec: exec.to_string(),
             scope,
+            categories: Vec::new(),
         }
     }
 

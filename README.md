@@ -35,6 +35,23 @@ Binary: `target/release/desx`.
 desx
 ```
 
+### Filter by category
+
+Use `--category` (alias `--categories`) to keep or drop apps by their
+`.desktop` `Categories=` values. The value is comma-separated; prefix a
+name with `-` to exclude it. Matching is case-insensitive. Include and
+exclude values cannot be mixed in one invocation.
+
+```sh
+desx --category game            # only apps in the Game category
+desx --category game,network    # apps in Game OR Network
+desx --category -game           # everything except games
+desx --categories -game,-audiovideo
+```
+
+Apps with no `Categories=` line are dropped by an include filter and kept
+by an exclude filter.
+
 Example output:
 
 ```

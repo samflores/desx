@@ -38,12 +38,18 @@ fn to_desktop_app(entry: &DesktopEntry, locales: &[String]) -> Option<DesktopApp
         .and_then(|name| lookup(name).find())
         .and_then(|p| p.to_str().map(|s| s.to_string()));
 
+    let categories = entry
+        .categories()
+        .map(|cats| cats.into_iter().map(str::to_string).collect())
+        .unwrap_or_default();
+
     Some(DesktopApp {
         appid: entry.appid.clone(),
         name,
         icon,
         exec,
         scope: classify_scope(&entry.path),
+        categories,
     })
 }
 
