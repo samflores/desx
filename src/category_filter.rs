@@ -47,9 +47,9 @@ impl CategoryFilter {
             (true, true) => Ok(None),
             (false, true) => Ok(Some(CategoryFilter::Include(includes))),
             (true, false) => Ok(Some(CategoryFilter::Exclude(excludes))),
-            (false, false) => Err(
-                "cannot mix included and excluded categories in the same filter".to_string(),
-            ),
+            (false, false) => {
+                Err("cannot mix included and excluded categories in the same filter".to_string())
+            }
         }
     }
 
@@ -182,8 +182,7 @@ mod tests {
 
     #[test]
     fn include_matches_any_listed_category() {
-        let filter =
-            CategoryFilter::Include(vec!["game".to_string(), "network".to_string()]);
+        let filter = CategoryFilter::Include(vec!["game".to_string(), "network".to_string()]);
         assert!(filter.matches(&app("Quake", &["Game"])));
         assert!(filter.matches(&app("Firefox", &["Network", "WebBrowser"])));
         assert!(!filter.matches(&app("Gimp", &["Graphics"])));

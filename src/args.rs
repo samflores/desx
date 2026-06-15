@@ -122,7 +122,14 @@ mod tests {
 
     #[test]
     fn repeated_flag_is_error() {
-        assert!(parse(["--category", "game", "--category", "network"].iter().copied()).is_err());
+        assert!(
+            parse(
+                ["--category", "game", "--category", "network"]
+                    .iter()
+                    .copied()
+            )
+            .is_err()
+        );
     }
 
     #[test]
