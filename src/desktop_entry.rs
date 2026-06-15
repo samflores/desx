@@ -24,6 +24,9 @@ pub struct DesktopApp {
     pub exec: String,
     /// Origin directory scope.
     pub scope: Scope,
+    /// `Categories=` values as written in the entry (e.g. `Game`, `Network`).
+    /// Empty when the entry has no `Categories=` line.
+    pub categories: Vec<String>,
 }
 
 impl DesktopApp {
@@ -44,6 +47,7 @@ mod tests {
             icon: None,
             exec: exec.to_string(),
             scope,
+            categories: Vec::new(),
         }
     }
 
