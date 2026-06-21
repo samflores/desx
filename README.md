@@ -10,8 +10,10 @@ Designed to pipe into a menu like [drmenu](https://github.com/samflores/drmenu).
 - Walks the XDG application directories (`$XDG_DATA_HOME/applications`,
   `$XDG_DATA_DIRS/applications`).
 - Filters out `NoDisplay=true`, `Hidden=true`, and non-`Application` entries.
-- Strips `%u %U %f %F %i %c %k` field codes from each `Exec=` line.
-- Resolves each `Icon=` to an absolute path via the XDG icon theme.
+- Strips `%u %U %f %F %i %c %k` field codes from each `Exec=` line,
+  collapsing leftover whitespace and preserving the literal `%%` escape.
+- Resolves each `Icon=` to an absolute path via the XDG icon theme. When
+  no icon resolves, the icon field is left empty.
 - Dedupes apps: entries with the same `Name` AND the same stripped `Exec`
   collapse to one (user-scoped entries win over system-scoped ones).
 - Disambiguates same-named apps with different `Exec` values by suffixing
@@ -19,7 +21,12 @@ Designed to pipe into a menu like [drmenu](https://github.com/samflores/drmenu).
 
 ## Dependencies
 
-Just Rust stable (edition 2024). All runtime deps are pure Rust.
+Rust stable (edition 2024). Runtime crates:
+
+- [`freedesktop-desktop-entry`](https://crates.io/crates/freedesktop-desktop-entry) — parse `.desktop` files and walk the XDG search paths.
+- [`freedesktop-icons`](https://crates.io/crates/freedesktop-icons) — resolve icon names to absolute paths.
+
+Tests additionally use [`tempfile`](https://crates.io/crates/tempfile).
 
 ## Build
 
