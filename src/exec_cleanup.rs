@@ -4,26 +4,28 @@
 //! a literal `%%` escape for a single `%`). Launchers that don't expand
 //! them must remove them before exec.
 
-use std::sync::LazyLock;
-
-use regex::Regex;
-
-static FIELD_CODE: LazyLock<Regex> =
-    LazyLock::new(|| Regex::new(r"%[uUfFick]").expect("valid field-code regex"));
-
 pub fn strip_field_codes(exec: &str) -> String {
-    // Handle the `%%` escape by swapping it to a placeholder, stripping
-    // the single-char codes, then restoring. This way `echo 100%%` stays
-    // `echo 100%` instead of being mangled.
-    let escaped = exec.replace("%%", "\u{FEFF}");
-    let stripped = FIELD_CODE.replace_all(&escaped, "");
-    collapse_internal_whitespace(&stripped.replace('\u{FEFF}', "%"))
-        .trim()
-        .to_string()
+    let mut iter = exec.chars();
+    let mut out = String::with_capacity(exec.len());
+    while let Some(c) = iter.next() {
+        if c != '%' {
+            out.push(c);
+            continue;
+        }
+        match iter.next() {
+            Some('%') => out.push('%'),
+            Some('u' | 'U' | 'f' | 'F' | 'i' | 'c' | 'k') => {}
+            Some(other) => {
+                out.push('%');
+                out.push(other);
+            }
+            None => out.push('%'),
+        }
+    }
+    collapse_internal_whitespace(&out).trim().to_string()
 }
 
 fn collapse_internal_whitespace(s: &str) -> String {
-    // Multiple spaces left behind by stripped codes should collapse to one.
     s.split_whitespace().collect::<Vec<_>>().join(" ")
 }
 
